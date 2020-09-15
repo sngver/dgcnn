@@ -31,6 +31,12 @@ def _init_():
         os.makedirs('checkpoints/'+args.exp_name)
     if not os.path.exists('checkpoints/'+args.exp_name+'/'+'models'):
         os.makedirs('checkpoints/'+args.exp_name+'/'+'models')
+
+    #
+    if not os.path.exists('checkpoints/'+args.exp_name+'/'+'dump'):
+        os.makedirs('checkpoints/'+args.exp_name+'/'+'dump')
+    #
+
     os.system('cp main.py checkpoints'+'/'+args.exp_name+'/'+'main.py.backup')
     os.system('cp model.py checkpoints' + '/' + args.exp_name + '/' + 'model.py.backup')
     os.system('cp util.py checkpoints' + '/' + args.exp_name + '/' + 'util.py.backup')
@@ -150,6 +156,13 @@ def test(args, io):
     count = 0.0
     test_true = []
     test_pred = []
+
+    #
+    DUMP_DIR = 'checkpoints/' + args.exp_name + '/' + 'dump'
+
+    fout = open(os.path.join(DUMP_DIR, 'pred_label.txt'), 'w')
+    #
+
     for data, label in test_loader:
 
         data, label = data.to(device), label.to(device).squeeze()
@@ -161,6 +174,12 @@ def test(args, io):
         test_pred.append(preds.detach().cpu().numpy())
     test_true = np.concatenate(test_true)
     test_pred = np.concatenate(test_pred)
+
+    #
+    for i in range(list(test_true.shape)[0]):
+        fout.write('%d, %d\n' % (test_pred[i], test_true[i]))
+    #
+
     test_acc = metrics.accuracy_score(test_true, test_pred)
     avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pred)
     outstr = 'Test :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)

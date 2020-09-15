@@ -28,7 +28,6 @@ def download():
         os.system('mv %s %s' % (zipfile[:-4], DATA_DIR))
         os.system('rm %s' % (zipfile))
 
-
 def load_data(partition):
     download()
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -61,6 +60,14 @@ def jitter_pointcloud(pointcloud, sigma=0.01, clip=0.02):
     return pointcloud
 
 
+def pc_normalize(pc):
+    centroid = np.mean(pc, axis=0)
+    pc = pc - centroid
+    m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
+    pc = pc / m
+    return pc
+
+
 class ModelNet40(Dataset):
     def __init__(self, num_points, partition='train'):
         self.data, self.label = load_data(partition)
@@ -69,6 +76,9 @@ class ModelNet40(Dataset):
 
     def __getitem__(self, item):
         pointcloud = self.data[item][:self.num_points]
+        #
+        pointcloud = pc_normalize(pointcloud)
+        #
         label = self.label[item]
         if self.partition == 'train':
             pointcloud = translate_pointcloud(pointcloud)
